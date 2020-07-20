@@ -5,8 +5,8 @@ import webworkify from 'webworkify'
 import compilerInput from './compiler-input'
 import { EventManager } from 'remix-lib'
 import { default as txHelper } from './txHelper';
-import { Source, SourceWithTarget, MessageFromWorker, CompilerState, CompilationResult, 
-        visitContractsCallbackParam, visitContractsCallbackInterface, CompilationError, 
+import { Source, SourceWithTarget, MessageFromWorker, CompilerState, CompilationResult,
+        visitContractsCallbackParam, visitContractsCallbackInterface, CompilationError,
         gatherImportsCallbackInterface } from './types'
 
 /*
@@ -39,7 +39,7 @@ export class Compiler {
       }
       this.state.compilationStartTime = null
     })
-  
+
     this.event.register('compilationStarted', () => {
       this.state.compilationStartTime = new Date().getTime()
     })
@@ -164,9 +164,14 @@ export class Compiler {
    * @param usingWorker if true, load compiler using worker
    * @param url URL to load compiler from
    */
-  
+
   loadVersion (usingWorker: boolean, url: string): void {
     console.log('Loading ' + url + ' ' + (usingWorker ? 'with worker' : 'without worker'))
+    if (url.includes('soljson-v0.5.17')) {
+        console.log("load gmsolc");
+        url = 'gmsolc/soljson.js';
+        usingWorker = false;
+    }
     this.event.trigger('loadingCompiler', [url, usingWorker])
     if (this.state.worker) {
       this.state.worker.terminate()
@@ -183,7 +188,7 @@ export class Compiler {
    * @dev Load compiler using 'script' element (without worker)
    * @param url URL to load compiler from
    */
-  
+
   loadInternal (url: string): void {
     delete window['Module']
     // NOTE: workaround some browsers?
@@ -247,11 +252,11 @@ export class Compiler {
       if(source && source.sources) {
         jobs.push({sources: source})
         this.state.worker.postMessage({
-          cmd: 'compile', 
-          job: jobs.length - 1, 
+          cmd: 'compile',
+          job: jobs.length - 1,
           input: compilerInput(source.sources, {
-                      optimize: this.state.optimize, 
-                      evmVersion: this.state.evmVersion, 
+                      optimize: this.state.optimize,
+                      evmVersion: this.state.evmVersion,
                       language: this.state.language
                   })
         })
@@ -259,7 +264,7 @@ export class Compiler {
     }
 
     this.state.worker.postMessage({
-      cmd: 'loadVersion', 
+      cmd: 'loadVersion',
       data: url
     })
   }
@@ -315,7 +320,7 @@ export class Compiler {
     const tmp: RegExpExecArray | null = /^(\d+.\d+.\d+)/.exec(version)
     return tmp ? tmp[1] : version
   }
-  
+
   /**
    * @dev Update ABI according to current compiler version
    * @param data Compilation result
